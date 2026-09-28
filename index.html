@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการสต็อกและจัดเตรียมอุปกรณ์หน้างาน</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts (Prompt) -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Navbar -->
+    <header class="bg-blue-600 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                📡 FieldOps & Stock Manager
+            </h1>
+            <span id="current-date" class="text-sm bg-blue-700 px-3 py-1 rounded-full"></span>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- ฝั่งซ้าย: ฟอร์มจัดเตรียมอุปกรณ์ (Job Preparation) -->
+        <section class="lg:col-span-1 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+            <h2 class="text-lg font-semibold text-blue-600 mb-4 flex items-center gap-2">
+                📋 จัดเตรียมอุปกรณ์ออกหน้างาน
+            </h2>
+            
+            <form id="job-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">เลขที่ใบงาน / ชื่องาน</label>
+                    <input type="text" id="job-name" required placeholder="เช่น JOB-2026-001 (ติดตั้งเสาอากาศ)" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ID สินค้า</label>
+                        <input type="text" id="item-id" required placeholder="เช่น P001" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none uppercase">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">หน่วย (อัตโนมัติ)</label>
+                        <input type="text" id="item-unit" readonly placeholder="หน่วย" class="w-full px-3 py-2 bg-gray-100 border rounded-lg text-gray-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ชื่ออุปกรณ์</label>
+                    <input type="text" id="item-name" readonly placeholder="แสดงชื่ออัตโนมัติจาก ID" class="w-full px-3 py-2 bg-gray-100 border rounded-lg text-gray-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">จำนวนที่ต้องใช้</label>
+                    <input type="number" id="item-qty" min="1" value="1" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+
+                <button type="submit" id="submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors shadow-sm cursor-pointer">
+                    + บันทึกรายการลง Google Sheets
+                </button>
+            </form>
+        </section>
+
+        <!-- ฝั่งขวา: ตารางรายการจัดเตรียม & สต็อกสินค้า -->
+        <section class="lg:col-span-2 space-y-6">
+            
+            <!-- รายการที่ต้องจัดเตรียม (Packing List) -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-800">📦 รายการในเซสชันนี้</h2>
+                    <span id="item-count" class="text-xs bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full font-medium">0 รายการ</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b text-sm text-gray-500">
+                                <th class="py-2 px-3">ใบงาน</th>
+                                <th class="py-2 px-3">รหัส / ชื่ออุปกรณ์</th>
+                                <th class="py-2 px-3">จำนวน</th>
+                                <th class="py-2 px-3">สถานะ</th>
+                                <th class="py-2 px-3 text-center">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="packing-table-body" class="text-sm">
+                            <tr class="text-gray-400 text-center">
+                                <td colspan="5" class="py-6">ยังไม่มีรายการในระบบ</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- คลังสินค้าจาก Google Sheets (Inventory Reference) -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-lg font-semibold text-gray-800">🏷️ สต็อกสินค้าใน Google Sheets</h2>
+                    <button onclick="loadInventory()" class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg text-gray-600 transition-colors">🔄 รีเฟรชสต็อก</button>
+                </div>
+                <div id="inventory-grid" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <p class="text-sm text-gray-400 col-span-3 py-2">กำลังโหลดข้อมูลจาก Google Sheets...</p>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- JavaScript สำหรับดึงข้อมูลและส่งข้อมูลเข้า Google Sheets -->
+    <script>
+        // แสดงวันที่ปัจจุบัน
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('current-date').innerText = new Date().toLocaleDateString('th-TH', options);
+
+        // ⚠️ แทนที่ URL ด้านล่างนี้ด้วย Web App URL ของคุณที่ได้จากการ Deploy Apps Script
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxvfgpyCr3oZPofPYLfSIrnRmOc_mon9nTpWiYDkh0ps4kOibQh10UAHiQeXwMXY6iQ/exec";
+
+        let inventoryData = {}; // เก็บข้อมูลสต็อกที่ดึงมาจาก Sheet
+        let packingList = [];   // เก็บรายการที่เพิ่มเข้ามาหน้าเว็บ
+
+        // 1. ฟังก์ชันโหลดสต็อกสินค้าจาก Google Sheets (GET)
+        async function loadInventory() {
+            if (WEB_APP_URL.includes("YOUR_GOOGLE")) {
+                console.warn("ยังไม่ได้ใส่ Web App URL ในโค้ด JavaScript");
+                return;
+            }
+            try {
+                let response = await fetch(`${WEB_APP_URL}?action=getInventory`);
+                let data = await response.json();
+                
+                inventoryData = {};
+                const grid = document.getElementById('inventory-grid');
+                grid.innerHTML = "";
+
+                data.forEach(item => {
+                    inventoryData[item.id] = { name: item.name, unit: item.unit, stock: item.stock };
+
+                    // แสดงผลกล่องสต็อก
+                    let div = document.createElement('div');
+                    div.className = "p-3 bg-gray-50 rounded-xl border border-gray-200";
+                    div.innerHTML = `
+                        <span class="text-xs font-bold text-blue-600">${item.id}</span>
+                        <p class="font-medium text-sm text-gray-800">${item.name}</p>
+                        <p class="text-xs text-gray-500">คงเหลือ: ${item.stock} ${item.unit}</p>
+                    `;
+                    grid.appendChild(div);
+                });
+            } catch (error) {
+                console.error("เกิดข้อผิดพลาดในการโหลดสต็อก:", error);
+            }
+        }
+
+        // เรียกใช้งานโหลดสต็อกตอนเปิดเว็บ
+        loadInventory();
+
+        // 2. ฟังก์ชันพิมพ์ ID แล้วดึงชื่อและหน่วยอัตโนมัติ
+        const itemIdInput = document.getElementById('item-id');
+        const itemNameInput = document.getElementById('item-name');
+        const itemUnitInput = document.getElementById('item-unit');
+
+        itemIdInput.addEventListener('input', (e) => {
+            const id = e.target.value.trim().toUpperCase();
+            if (inventoryData[id]) {
+                itemNameInput.value = inventoryData[id].name;
+                itemUnitInput.value = inventoryData[id].unit;
+            } else {
+                itemNameInput.value = "";
+                itemUnitInput.value = "";
+            }
+        });
+
+        // 3. ฟังก์ชันกดบันทึกส่งข้อมูลไป Google Sheets (POST)
+        const jobForm = document.getElementById('job-form');
+        jobForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (WEB_APP_URL.includes("YOUR_GOOGLE")) {
+                alert("กรุณานำ Web App URL มาใส่ในตัวแปร WEB_APP_URL ในโค้ด HTML ก่อนครับ");
+                return;
+            }
+
+            const jobName = document.getElementById('job-name').value;
+            const itemId = itemIdInput.value.trim().toUpperCase();
+            const itemName = itemNameInput.value;
+            const itemUnit = itemUnitInput.value;
+            const itemQty = document.getElementById('item-qty').value;
+
+            if (!itemName) {
+                alert("ไม่พบรหัสสินค้านี้ในระบบ กรุณาตรวจสอบรหัส ID อีกครั้ง");
+                return;
+            }
+
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.innerText = "กำลังบันทึก...";
+            submitBtn.disabled = true;
+
+            const payload = {
+                jobName: jobName,
+                itemId: itemId,
+                itemName: itemName,
+                itemQty: itemQty,
+                itemUnit: itemUnit,
+                status: "รอจัดเตรียม"
+            };
+
+            try {
+                // ส่งข้อมูลไปบันทึกใน Google Sheets ผ่าน Apps Script
+                await fetch(WEB_APP_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify(payload)
+                });
+
+                // เพิ่มข้อมูลลงตารางหน้าเว็บจำลองชั่วคราว
+                packingList.push({
+                    id: Date.now(),
+                    ...payload
+                });
+
+                renderTable();
+                
+                // รีเซ็ตฟอร์มเฉพาะช่องอุปกรณ์ (เก็บชื่องานไว้กรอกต่อได้สะดวก)
+                itemIdInput.value = "";
+                itemNameInput.value = "";
+                itemUnitInput.value = "";
+                document.getElementById('item-qty').value = "1";
+                
+                alert("บันทึกข้อมูลลง Google Sheets สำเร็จ!");
+            } catch (error) {
+                console.error("บันทึกไม่สำเร็จ:", error);
+                alert("เกิดข้อผิดพลาดในการบันทึก");
+            } finally {
+                submitBtn.innerText = "+ บันทึกรายการลง Google Sheets";
+                submitBtn.disabled = false;
+            }
+        });
+
+        // ฟังก์ชันสลับสถานะในตารางหน้าเว็บ
+        function toggleStatus(id) {
+            const item = packingList.find(i => i.id === id);
+            if (item) {
+                item.status = item.status === "รอจัดเตรียม" ? "พร้อมออกหน้างาน" : "รอจัดเตรียม";
+                renderTable();
+            }
+        }
+
+        // ฟังก์ชันลบรายการเฉพาะหน้าจอ
+        function deleteItem(id) {
+            packingList = packingList.filter(i => i.id !== id);
+            renderTable();
+        }
+
+        // เรนเดอร์ข้อมูลลงตาราง HTML
+        function renderTable() {
+            const tbody = document.getElementById('packing-table-body');
+            document.getElementById('item-count').innerText = `${packingList.length} รายการ`;
+
+            if (packingList.length === 0) {
+                tbody.innerHTML = `<tr class="text-gray-400 text-center"><td colspan="5" class="py-6">ยังไม่มีรายการในระบบ</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = "";
+            packingList.forEach(item => {
+                const statusColor = item.status === "พร้อมออกหน้างาน" 
+                    ? "bg-green-100 text-green-800" 
+                    : "bg-yellow-100 text-yellow-800";
+
+                const tr = document.createElement('tr');
+                tr.className = "border-b hover:bg-gray-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="py-3 px-3 font-medium text-gray-700">${item.jobName}</td>
+                    <td class="py-3 px-3">
+                        <span class="text-xs font-bold text-blue-600 block">${item.itemId}</span>
+                        ${item.itemName}
+                    </td>
+                    <td class="py-3 px-3">${item.itemQty} ${item.itemUnit}</td>
+                    <td class="py-3 px-3">
+                        <button onclick="toggleStatus(${item.id})" class="text-xs px-2.5 py-1 rounded-full font-medium ${statusColor} cursor-pointer hover:opacity-80">
+                            ${item.status} 🔄
+                        </button>
+                    </td>
+                    <td class="py-3 px-3 text-center">
+                        <button onclick="deleteItem(${item.id})" class="text-red-500 hover:text-red-700 text-xs bg-red-50 px-2 py-1 rounded-lg cursor-pointer">ลบ</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
