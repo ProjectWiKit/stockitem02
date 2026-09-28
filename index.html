@@ -6,132 +6,247 @@
     <title>ระบบจัดการสต็อกและจัดเตรียมอุปกรณ์หน้างาน</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts (Prompt) -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Prompt', sans-serif; }
-    </style>
+    <style> body { font-family: 'Prompt', sans-serif; } </style>
 </head>
 <body class="bg-gray-50 text-gray-800">
 
-    <!-- Navbar -->
-    <header class="bg-blue-600 text-white shadow-md">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 class="text-xl font-bold flex items-center gap-2">
-                📡 FieldOps & Stock Manager
-            </h1>
-            <span id="current-date" class="text-sm bg-blue-700 px-3 py-1 rounded-full"></span>
-        </div>
-    </header>
-
-    <!-- Main Container -->
-    <main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        <!-- ฝั่งซ้าย: ฟอร์มจัดเตรียมอุปกรณ์ (Job Preparation) -->
-        <section class="lg:col-span-1 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-            <h2 class="text-lg font-semibold text-blue-600 mb-4 flex items-center gap-2">
-                📋 จัดเตรียมอุปกรณ์ออกหน้างาน
-            </h2>
-            
-            <form id="job-form" class="space-y-4">
+    <!-- 1. ส่วนหน้าล็อกอิน (Login Screen) -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center px-4">
+        <div class="max-w-md w-full bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-bold text-blue-600">📡 FieldOps Login</h1>
+                <p class="text-sm text-gray-500 mt-1">ระบบจัดการสต็อกและเตรียมอุปกรณ์หน้างาน</p>
+            </div>
+            <form id="login-form" class="space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">เลขที่ใบงาน / ชื่องาน</label>
-                    <input type="text" id="job-name" required placeholder="เช่น JOB-2026-001 (ติดตั้งเสาอากาศ)" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อผู้ใช้งาน (Username)</label>
+                    <input type="text" id="login-user" required placeholder="เช่น admin หรือ member" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">ID สินค้า</label>
-                        <input type="text" id="item-id" required placeholder="เช่น P001" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none uppercase">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">หน่วย (อัตโนมัติ)</label>
-                        <input type="text" id="item-unit" readonly placeholder="หน่วย" class="w-full px-3 py-2 bg-gray-100 border rounded-lg text-gray-500">
-                    </div>
-                </div>
-
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ชื่ออุปกรณ์</label>
-                    <input type="text" id="item-name" readonly placeholder="แสดงชื่ออัตโนมัติจาก ID" class="w-full px-3 py-2 bg-gray-100 border rounded-lg text-gray-500">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">รหัสผ่าน (Password)</label>
+                    <input type="password" id="login-pass" required placeholder="••••" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">จำนวนที่ต้องใช้</label>
-                    <input type="number" id="item-qty" min="1" value="1" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                </div>
-
-                <button type="submit" id="submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors shadow-sm cursor-pointer">
-                    + บันทึกรายการลง Google Sheets
+                <button type="submit" id="login-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors cursor-pointer shadow-sm">
+                    เข้าสู่ระบบ
                 </button>
             </form>
-        </section>
+            <div class="mt-4 text-xs text-gray-400 text-center">
+                ทดสอบระบบ: admin / 1234 หรือ member / 1234
+            </div>
+        </div>
+    </div>
 
-        <!-- ฝั่งขวา: ตารางรายการจัดเตรียม & สต็อกสินค้า -->
-        <section class="lg:col-span-2 space-y-6">
-            
-            <!-- รายการที่ต้องจัดเตรียม (Packing List) -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold text-gray-800">📦 รายการในเซสชันนี้</h2>
-                    <span id="item-count" class="text-xs bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full font-medium">0 รายการ</span>
-                </div>
-
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="border-b text-sm text-gray-500">
-                                <th class="py-2 px-3">ใบงาน</th>
-                                <th class="py-2 px-3">รหัส / ชื่ออุปกรณ์</th>
-                                <th class="py-2 px-3">จำนวน</th>
-                                <th class="py-2 px-3">สถานะ</th>
-                                <th class="py-2 px-3 text-center">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="packing-table-body" class="text-sm">
-                            <tr class="text-gray-400 text-center">
-                                <td colspan="5" class="py-6">ยังไม่มีรายการในระบบ</td>
-                            </tr>
-                        </tbody>
-                    </table>
+    <!-- 2. ส่วนระบบหลักหลังล็อกอิน (Main App) -->
+    <div id="main-app" class="hidden min-h-screen flex flex-col">
+        <!-- Navbar -->
+        <header class="bg-blue-600 text-white shadow-md">
+            <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+                <h1 class="text-lg font-bold flex items-center gap-2">
+                    📡 FieldOps & Stock Manager <span id="user-role-badge" class="text-xs bg-blue-700 px-2.5 py-0.5 rounded-full font-normal"></span>
+                </h1>
+                <div class="flex items-center gap-3">
+                    <span id="user-display-name" class="text-sm"></span>
+                    <button onclick="logout()" class="text-xs bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg transition-colors cursor-pointer">ออกจากระบบ</button>
                 </div>
             </div>
+        </header>
 
-            <!-- คลังสินค้าจาก Google Sheets (Inventory Reference) -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
-                <div class="flex justify-between items-center mb-3">
-                    <h2 class="text-lg font-semibold text-gray-800">🏷️ สต็อกสินค้าใน Google Sheets</h2>
-                    <button onclick="loadInventory()" class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg text-gray-600 transition-colors">🔄 รีเฟรชสต็อก</button>
+        <!-- Main Container -->
+        <main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-3 gap-6 flex-grow w-full">
+
+            <!-- ฝั่งซ้าย: ฟอร์มจัดเตรียมอุปกรณ์ & Admin Panel -->
+            <section class="lg:col-span-1 space-y-6">
+                
+                <!-- ฟอร์มเตรียมอุปกรณ์ -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                    <h2 class="text-lg font-semibold text-blue-600 mb-4 flex items-center gap-2">
+                        📋 จัดเตรียมอุปกรณ์ออกหน้างาน
+                    </h2>
+                    <form id="job-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">เลขที่ใบงาน / ชื่องาน</label>
+                            <input type="text" id="job-name" required placeholder="เช่น JOB-2026-001" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">ID สินค้า</label>
+                                <input type="text" id="item-id" required placeholder="เช่น P001" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none uppercase">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">หน่วย</label>
+                                <input type="text" id="item-unit" readonly placeholder="หน่วย" class="w-full px-3 py-2 bg-gray-100 border rounded-lg text-gray-500">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ชื่ออุปกรณ์</label>
+                            <input type="text" id="item-name" readonly placeholder="แสดงชื่ออัตโนมัติ" class="w-full px-3 py-2 bg-gray-100 border rounded-lg text-gray-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">จำนวนที่ต้องใช้</label>
+                            <input type="number" id="item-qty" min="1" value="1" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <button type="submit" id="submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors cursor-pointer">
+                            + บันทึกรายการเตรียมของ
+                        </button>
+                    </form>
                 </div>
-                <div id="inventory-grid" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <p class="text-sm text-gray-400 col-span-3 py-2">กำลังโหลดข้อมูลจาก Google Sheets...</p>
+
+                <!-- Admin Panel (เฉพาะหัวหน้าช่าง) -->
+                <div id="admin-panel" class="hidden bg-white p-5 rounded-2xl shadow-sm border border-orange-200">
+                    <h2 class="text-lg font-semibold text-orange-600 mb-2 flex items-center gap-2">
+                        ⚙️ จัดการสต็อก (Admin Panel)
+                    </h2>
+                    <p class="text-xs text-gray-500 mb-4">เพิ่มสินค้าใหม่ หรืออัปเดตจำนวนสต็อกลง Google Sheets</p>
+                    <form id="stock-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ID สินค้า (พิมพ์รหัสเดิมเพื่ออัปเดต)</label>
+                            <input type="text" id="stock-id" required placeholder="เช่น P001 หรือ P999" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none uppercase">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">ชื่ออุปกรณ์</label>
+                            <input type="text" id="stock-name" required placeholder="ชื่ออุปกรณ์" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none">
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">จำนวนสต็อกคงเหลือ</label>
+                                <input type="number" id="stock-qty" min="0" value="10" required class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">หน่วย</label>
+                                <input type="text" id="stock-unit" required placeholder="เช่น เส้น, ตัว, ชุด" class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none">
+                            </div>
+                        </div>
+                        <button type="submit" id="stock-submit-btn" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium py-2.5 rounded-lg transition-colors cursor-pointer shadow-sm">
+                            💾 บันทึก/อัปเดตสต็อกใน Sheet
+                        </button>
+                    </form>
                 </div>
-            </div>
 
-        </section>
+            </section>
 
-    </main>
+            <!-- ฝั่งขวา: ตารางรายการเตรียมของ & คลังสินค้า -->
+            <section class="lg:col-span-2 space-y-6">
+                <!-- ตารางรายการเตรียมของ -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold text-gray-800">📦 รายการเตรียมของในเซสชันนี้</h2>
+                        <span id="item-count" class="text-xs bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full font-medium">0 รายการ</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b text-sm text-gray-500">
+                                    <th class="py-2 px-3">ใบงาน</th>
+                                    <th class="py-2 px-3">รหัส / ชื่ออุปกรณ์</th>
+                                    <th class="py-2 px-3">จำนวน</th>
+                                    <th class="py-2 px-3">สถานะ</th>
+                                    <th class="py-2 px-3 text-center">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="packing-table-body" class="text-sm">
+                                <tr class="text-gray-400 text-center"><td colspan="5" class="py-6">ยังไม่มีรายการในระบบ</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-    <!-- JavaScript สำหรับดึงข้อมูลและส่งข้อมูลเข้า Google Sheets -->
+                <!-- คลังสินค้าจาก Google Sheets -->
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-lg font-semibold text-gray-800">🏷️ คลังสินค้าปัจจุบัน</h2>
+                        <button onclick="loadInventory()" class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg text-gray-600 transition-colors cursor-pointer">🔄 รีเฟรชสต็อก</button>
+                    </div>
+                    <div id="inventory-grid" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <p class="text-sm text-gray-400 col-span-3 py-2">กำลังโหลดข้อมูล...</p>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- JavaScript -->
     <script>
-        // แสดงวันที่ปัจจุบัน
-        const options = { year: 'numeric', month: 'long', day: 'numeric' };
-        document.getElementById('current-date').innerText = new Date().toLocaleDateString('th-TH', options);
+        // ⚠️ ใส่ Web App URL ของคุณที่ได้จากการ Deploy Apps Script
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxrqoN7PuqqdYwXpgKOMxxaSFYMNs0NfWD5OPdg_ciIEo9U1wEk50WVrgGAcoC0PfFE/exec";
 
-        // ⚠️ แทนที่ URL ด้านล่างนี้ด้วย Web App URL ของคุณที่ได้จากการ Deploy Apps Script
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxvfgpyCr3oZPofPYLfSIrnRmOc_mon9nTpWiYDkh0ps4kOibQh10UAHiQeXwMXY6iQ/exec";
+        let currentUser = null;
+        let inventoryData = {};
+        let packingList = [];
 
-        let inventoryData = {}; // เก็บข้อมูลสต็อกที่ดึงมาจาก Sheet
-        let packingList = [];   // เก็บรายการที่เพิ่มเข้ามาหน้าเว็บ
-
-        // 1. ฟังก์ชันโหลดสต็อกสินค้าจาก Google Sheets (GET)
-        async function loadInventory() {
-            if (WEB_APP_URL.includes("YOUR_GOOGLE")) {
-                console.warn("ยังไม่ได้ใส่ Web App URL ในโค้ด JavaScript");
-                return;
+        // เช็กสถานะการล็อกอินทันทีที่เปิดหน้าเว็บหรือกด F5
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedUser = localStorage.getItem('fieldops_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                initApp(); // ข้ามหน้าล็อกอิน เปิดเข้าหน้าหลักทันที
             }
+        });
+
+        // 1. ระบบล็อกอิน
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value.trim();
+            const btn = document.getElementById('login-btn');
+
+            btn.innerText = "กำลังตรวจสอบ...";
+            btn.disabled = true;
+
             try {
-                let response = await fetch(`${WEB_APP_URL}?action=getInventory`);
-                let data = await response.json();
+                let res = await fetch(`${WEB_APP_URL}?action=login&username=${encodeURIComponent(user)}&password=${encodeURIComponent(pass)}`);
+                let result = await res.json();
+
+                if (result.status === "success") {
+                    currentUser = result;
+                    // บันทึกสถานะลงในหน่วยความจำเบราว์เซอร์ เพื่อให้อยู่ต่อได้แม้กด F5
+                    localStorage.setItem('fieldops_user', JSON.stringify(currentUser));
+                    initApp();
+                } else {
+                    alert(result.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("เกิดข้อผิดพลาดในการเชื่อมต่อระบบล็อกอิน");
+            } finally {
+                btn.innerText = "เข้าสู่ระบบ";
+                btn.disabled = false;
+            }
+        });
+
+        // ออกจากระบบ (ล้างข้อมูลใน localStorage)
+        function logout() {
+            localStorage.removeItem('fieldops_user');
+            currentUser = null;
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('login-form').reset();
+        }
+
+        // 2. เริ่มต้นการทำงานหลังล็อกอินผ่าน หรือกด F5 แล้วเจอ Session เดิม
+        function initApp() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            
+            document.getElementById('user-display-name').innerText = currentUser.fullName;
+            document.getElementById('user-role-badge').innerText = currentUser.role === 'admin' ? 'หัวหน้าช่าง (Admin)' : 'ช่างทั่วไป (Member)';
+
+            // ควบคุมการแสดงผล Admin Panel ตามสิทธิ์
+            if (currentUser.role === 'admin') {
+                document.getElementById('admin-panel').classList.remove('hidden');
+            } else {
+                document.getElementById('admin-panel').classList.add('hidden');
+            }
+
+            loadInventory();
+        }
+
+        // 3. โหลดสต็อกสินค้า
+        async function loadInventory() {
+            try {
+                let res = await fetch(`${WEB_APP_URL}?action=getInventory`);
+                let data = await res.json();
                 
                 inventoryData = {};
                 const grid = document.getElementById('inventory-grid');
@@ -140,7 +255,6 @@
                 data.forEach(item => {
                     inventoryData[item.id] = { name: item.name, unit: item.unit, stock: item.stock };
 
-                    // แสดงผลกล่องสต็อก
                     let div = document.createElement('div');
                     div.className = "p-3 bg-gray-50 rounded-xl border border-gray-200";
                     div.innerHTML = `
@@ -150,15 +264,12 @@
                     `;
                     grid.appendChild(div);
                 });
-            } catch (error) {
-                console.error("เกิดข้อผิดพลาดในการโหลดสต็อก:", error);
+            } catch (err) {
+                console.error("โหลดสต็อกไม่สำเร็จ", err);
             }
         }
 
-        // เรียกใช้งานโหลดสต็อกตอนเปิดเว็บ
-        loadInventory();
-
-        // 2. ฟังก์ชันพิมพ์ ID แล้วดึงชื่อและหน่วยอัตโนมัติ
+        // 4. พิมพ์ ID แล้วดึงชื่อและหน่วยอัตโนมัติ
         const itemIdInput = document.getElementById('item-id');
         const itemNameInput = document.getElementById('item-name');
         const itemUnitInput = document.getElementById('item-unit');
@@ -174,16 +285,9 @@
             }
         });
 
-        // 3. ฟังก์ชันกดบันทึกส่งข้อมูลไป Google Sheets (POST)
-        const jobForm = document.getElementById('job-form');
-        jobForm.addEventListener('submit', async (e) => {
+        // 5. บันทึกรายการเตรียมของ (Job Preparation)
+        document.getElementById('job-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            if (WEB_APP_URL.includes("YOUR_GOOGLE")) {
-                alert("กรุณานำ Web App URL มาใส่ในตัวแปร WEB_APP_URL ในโค้ด HTML ก่อนครับ");
-                return;
-            }
-
             const jobName = document.getElementById('job-name').value;
             const itemId = itemIdInput.value.trim().toUpperCase();
             const itemName = itemNameInput.value;
@@ -191,25 +295,13 @@
             const itemQty = document.getElementById('item-qty').value;
 
             if (!itemName) {
-                alert("ไม่พบรหัสสินค้านี้ในระบบ กรุณาตรวจสอบรหัส ID อีกครั้ง");
+                alert("ไม่พบรหัสสินค้านี้ในระบบ");
                 return;
             }
 
-            const submitBtn = document.getElementById('submit-btn');
-            submitBtn.innerText = "กำลังบันทึก...";
-            submitBtn.disabled = true;
-
-            const payload = {
-                jobName: jobName,
-                itemId: itemId,
-                itemName: itemName,
-                itemQty: itemQty,
-                itemUnit: itemUnit,
-                status: "รอจัดเตรียม"
-            };
+            const payload = { action: "saveJob", jobName, itemId, itemName, itemQty, itemUnit, status: "รอจัดเตรียม" };
 
             try {
-                // ส่งข้อมูลไปบันทึกใน Google Sheets ผ่าน Apps Script
                 await fetch(WEB_APP_URL, {
                     method: "POST",
                     mode: "no-cors",
@@ -217,31 +309,53 @@
                     body: JSON.stringify(payload)
                 });
 
-                // เพิ่มข้อมูลลงตารางหน้าเว็บจำลองชั่วคราว
-                packingList.push({
-                    id: Date.now(),
-                    ...payload
-                });
-
+                packingList.push({ id: Date.now(), ...payload });
                 renderTable();
                 
-                // รีเซ็ตฟอร์มเฉพาะช่องอุปกรณ์ (เก็บชื่องานไว้กรอกต่อได้สะดวก)
                 itemIdInput.value = "";
                 itemNameInput.value = "";
                 itemUnitInput.value = "";
                 document.getElementById('item-qty').value = "1";
-                
-                alert("บันทึกข้อมูลลง Google Sheets สำเร็จ!");
-            } catch (error) {
-                console.error("บันทึกไม่สำเร็จ:", error);
+                alert("บันทึกรายการสำเร็จ!");
+            } catch (err) {
                 alert("เกิดข้อผิดพลาดในการบันทึก");
-            } finally {
-                submitBtn.innerText = "+ บันทึกรายการลง Google Sheets";
-                submitBtn.disabled = false;
             }
         });
 
-        // ฟังก์ชันสลับสถานะในตารางหน้าเว็บ
+        // 6. Admin ฟอร์มเพิ่ม/อัปเดตอุปกรณ์ในสต็อก
+        document.getElementById('stock-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const stockId = document.getElementById('stock-id').value.trim().toUpperCase();
+            const stockName = document.getElementById('stock-name').value.trim();
+            const stockQty = document.getElementById('stock-qty').value;
+            const stockUnit = document.getElementById('stock-unit').value.trim();
+            const btn = document.getElementById('stock-submit-btn');
+
+            btn.innerText = "กำลังบันทึก...";
+            btn.disabled = true;
+
+            const payload = { action: "saveInventoryItem", itemId: stockId, itemName: stockName, itemStock: stockQty, itemUnit: stockUnit };
+
+            try {
+                await fetch(WEB_APP_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify(payload)
+                });
+
+                alert("อัปเดตสต็อกใน Google Sheets สำเร็จ!");
+                document.getElementById('stock-form').reset();
+                setTimeout(loadInventory, 1500);
+            } catch (err) {
+                alert("บันทึกสต็อกไม่สำเร็จ");
+            } finally {
+                btn.innerText = "💾 บันทึก/อัปเดตสต็อกใน Sheet";
+                btn.disabled = false;
+            }
+        });
+
+        // จัดการตารางหน้าเว็บ
         function toggleStatus(id) {
             const item = packingList.find(i => i.id === id);
             if (item) {
@@ -249,46 +363,28 @@
                 renderTable();
             }
         }
-
-        // ฟังก์ชันลบรายการเฉพาะหน้าจอ
         function deleteItem(id) {
             packingList = packingList.filter(i => i.id !== id);
             renderTable();
         }
-
-        // เรนเดอร์ข้อมูลลงตาราง HTML
         function renderTable() {
             const tbody = document.getElementById('packing-table-body');
             document.getElementById('item-count').innerText = `${packingList.length} รายการ`;
-
             if (packingList.length === 0) {
                 tbody.innerHTML = `<tr class="text-gray-400 text-center"><td colspan="5" class="py-6">ยังไม่มีรายการในระบบ</td></tr>`;
                 return;
             }
-
             tbody.innerHTML = "";
             packingList.forEach(item => {
-                const statusColor = item.status === "พร้อมออกหน้างาน" 
-                    ? "bg-green-100 text-green-800" 
-                    : "bg-yellow-100 text-yellow-800";
-
+                const statusColor = item.status === "พร้อมออกหน้างาน" ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800";
                 const tr = document.createElement('tr');
-                tr.className = "border-b hover:bg-gray-50 transition-colors";
+                tr.className = "border-b hover:bg-gray-50";
                 tr.innerHTML = `
-                    <td class="py-3 px-3 font-medium text-gray-700">${item.jobName}</td>
-                    <td class="py-3 px-3">
-                        <span class="text-xs font-bold text-blue-600 block">${item.itemId}</span>
-                        ${item.itemName}
-                    </td>
+                    <td class="py-3 px-3 font-medium">${item.jobName}</td>
+                    <td class="py-3 px-3"><span class="text-xs font-bold text-blue-600 block">${item.itemId}</span>${item.itemName}</td>
                     <td class="py-3 px-3">${item.itemQty} ${item.itemUnit}</td>
-                    <td class="py-3 px-3">
-                        <button onclick="toggleStatus(${item.id})" class="text-xs px-2.5 py-1 rounded-full font-medium ${statusColor} cursor-pointer hover:opacity-80">
-                            ${item.status} 🔄
-                        </button>
-                    </td>
-                    <td class="py-3 px-3 text-center">
-                        <button onclick="deleteItem(${item.id})" class="text-red-500 hover:text-red-700 text-xs bg-red-50 px-2 py-1 rounded-lg cursor-pointer">ลบ</button>
-                    </td>
+                    <td class="py-3 px-3"><button onclick="toggleStatus(${item.id})" class="text-xs px-2.5 py-1 rounded-full font-medium ${statusColor} cursor-pointer">${item.status} 🔄</button></td>
+                    <td class="py-3 px-3 text-center"><button onclick="deleteItem(${item.id})" class="text-red-500 hover:text-red-700 text-xs bg-red-50 px-2 py-1 rounded-lg cursor-pointer">ลบ</button></td>
                 `;
                 tbody.appendChild(tr);
             });
